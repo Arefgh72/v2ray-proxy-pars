@@ -1,0 +1,81 @@
+name: Fetch Proxies
+
+on:
+  schedule:
+    # اجرا شدن هر روز ساعت 00:00 UTC
+    - cron: '0 0 * * *'
+  
+  # دستی اجرا کردن
+  workflow_dispatch:
+  
+  # هر پوش به برنچ main
+  push:
+    branches:
+      - main
+
+jobs:
+  fetch-proxies:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install curl-cffi
+      
+      - name: Create output directory
+        run: mkdir -p output
+      
+      - name: Run fetch proxies script
+        id: fetch
+        run: |
+          cd scripts
+          python -m 01_fetch_proxies 2>&1 | tee ../fetch_proxies_log.txt || true
+          cd ..
+      
+      - name: Check if proxies were fetched
+        run: |
+          if [ -f output/raw_proxies.txt ]; then
+            echo "✅ Proxies file created"
+            PROXY_COUNT=$(wc -l < output/raw_proxies.txt)
+            echo "📊 Total proxies: $PROXY_COUNT"
+          else
+            echo "⚠️ No proxies file found"
+          fi
+      
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # اگر تغییرات وجود داشت commit کنه
+          if git diff --quiet; then
+            echo "No changes to commit"
+          else
+            git add -A
+            git commit -m "🔄 Auto: Fetch proxies - $(date +'%Y-%m-%d %H:%M:%S')"
+            git push origin main
+          fi
+      
+      - name: Upload logs as artifact
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: fetch-proxies-logs
+          path: |
+            fetch_proxies_log.txt
+            output/raw_proxies.txt
+          retention-days: 30
