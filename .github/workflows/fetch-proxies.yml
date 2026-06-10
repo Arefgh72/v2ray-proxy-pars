@@ -2,13 +2,13 @@ name: Fetch Proxies
 
 on:
   schedule:
-    # اجرا شدن هر روز ساعت 00:00 UTC
+    # Run every day at 00:00 UTC
     - cron: '0 0 * * *'
   
-  # دستی اجرا کردن
+  # Manual run
   workflow_dispatch:
   
-  # هر پوش به برنچ main
+  # On every push to main branch
   push:
     branches:
       - main
@@ -42,18 +42,25 @@ jobs:
       - name: Run fetch proxies script
         id: fetch
         run: |
-          cd scripts
-          python -m 01_fetch_proxies 2>&1 | tee ../fetch_proxies_log.txt || true
-          cd ..
+          python scripts/01_fetch_proxies.py 2>&1 | tee fetch_proxies_log.txt || true
       
       - name: Check if proxies were fetched
         run: |
+          echo "=== Checking Output Files ==="
           if [ -f output/raw_proxies.txt ]; then
-            echo "✅ Proxies file created"
+            echo "✅ Raw proxies file created"
             PROXY_COUNT=$(wc -l < output/raw_proxies.txt)
-            echo "📊 Total proxies: $PROXY_COUNT"
+            echo "📊 Total raw proxies: $PROXY_COUNT"
           else
-            echo "⚠️ No proxies file found"
+            echo "⚠️ No raw proxies file found"
+          fi
+          
+          if [ -f output/v2ray_config.txt ]; then
+            echo "✅ V2Ray config file created"
+            CONFIG_COUNT=$(wc -l < output/v2ray_config.txt)
+            echo "📊 Total V2Ray configs: $CONFIG_COUNT"
+          else
+            echo "⚠️ No V2Ray config file found"
           fi
       
       - name: Commit and push changes
@@ -61,13 +68,16 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
-          # اگر تغییرات وجود داشت commit کنه
-          if git diff --quiet; then
-            echo "No changes to commit"
-          else
-            git add -A
+          # Add output files if they exist
+          git add output/raw_proxies.txt output/v2ray_config.txt 2>/dev/null || true
+          
+          # Check if there are changes to commit
+          if ! git diff --cached --quiet; then
             git commit -m "🔄 Auto: Fetch proxies - $(date +'%Y-%m-%d %H:%M:%S')"
             git push origin main
+            echo "✅ Changes pushed successfully"
+          else
+            echo "ℹ️ No output files to commit"
           fi
       
       - name: Upload logs as artifact
@@ -78,4 +88,5 @@ jobs:
           path: |
             fetch_proxies_log.txt
             output/raw_proxies.txt
+            output/v2ray_config.txt
           retention-days: 30
