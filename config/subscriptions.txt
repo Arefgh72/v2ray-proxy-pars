@@ -3,3 +3,4 @@ https://gitverse.ru/api/repos/ru-wbl/wl/raw/branch/master/KvRuVPN%2FKvRuVPN.txt
 https://gitverse.ru/api/repos/flaafix/AetrisVPN_Black_list/raw/branch/master/configs.txt
 https://raw.githubusercontent.com/arshiacomplus/v2rayExtractor/main/vless.html
 https://raw.githubusercontent.com/masir-sefid/Sub/main/@Masir_Sefid.txt
+https://raw.githubusercontent.com/barry-far/V2ray-config/main/Splitted-By-Protocol/vless.txt
