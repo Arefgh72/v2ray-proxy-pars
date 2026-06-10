@@ -2,8 +2,8 @@ name: Fetch Proxies
 
 on:
   schedule:
-    # Run every day at 00:00 UTC
-    - cron: '0 0 * * *'
+    # Run every 3 hours
+    - cron: '0 */3 * * *'
   
   # Manual run
   workflow_dispatch:
