@@ -2,10 +2,13 @@
 from curl_cffi.requests import get
 import base64
 import os
+from pathlib import Path
 
-SUBSCRIPTIONS_FILE_PATH = 'config/subscriptions.txt'
-RAW_PROXIES_OUTPUT_PATH = 'output/raw_proxies.txt'
-V2RAY_CONFIG_OUTPUT_PATH = 'output/v2ray_config.txt'
+# Get the repo root directory (parent of scripts folder)
+REPO_ROOT = Path(__file__).parent.parent
+SUBSCRIPTIONS_FILE_PATH = REPO_ROOT / 'config' / 'subscriptions.txt'
+RAW_PROXIES_OUTPUT_PATH = REPO_ROOT / 'output' / 'raw_proxies.txt'
+V2RAY_CONFIG_OUTPUT_PATH = REPO_ROOT / 'output' / 'v2ray_config.txt'
 
 def get_subscription_links():
     """
@@ -19,6 +22,8 @@ def get_subscription_links():
         return links
     except FileNotFoundError:
         print(f"✗ Error: {SUBSCRIPTIONS_FILE_PATH} not found.")
+        print(f"   Current path: {os.getcwd()}")
+        print(f"   Looking for: {SUBSCRIPTIONS_FILE_PATH}")
         return []
     except Exception as e:
         print(f"✗ Error reading subscription file: {str(e)}")
@@ -72,8 +77,9 @@ def main():
     print("\n" + "="*60)
     print("V2Ray Proxy Parser - Fetching Configurations")
     print("="*60)
+    print(f"Repository Root: {REPO_ROOT}")
     
-    os.makedirs('output', exist_ok=True)
+    os.makedirs(REPO_ROOT / 'output', exist_ok=True)
     
     # Step 1: Get subscription links
     subscription_links = get_subscription_links()
